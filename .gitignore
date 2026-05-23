@@ -1,0 +1,11 @@
+node_modules
+dist
+.edge-shot-profile
+.env
+.env.*
+.DS_Store
+*.log
+.cf-deploy
+.wrangler
+
+.vercel
