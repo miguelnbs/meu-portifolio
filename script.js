@@ -1,52 +1,5 @@
 const revealItems = document.querySelectorAll(".reveal");
-const colorInputs = document.querySelectorAll("[data-color-var]");
-const colorReset = document.querySelector(".color-reset");
 const backToTop = document.querySelector(".back-to-top");
-
-const defaultColors = {
-  "--bg": "#070908",
-  "--surface": "#101513",
-  "--text": "#f2fbf6",
-  "--mint": "#6defc0",
-  "--cyan": "#7ddde7",
-  "--amber": "#efc96d",
-};
-
-const setThemeColor = (variable, value) => {
-  document.documentElement.style.setProperty(variable, value);
-
-  if (variable === "--surface") {
-    document.documentElement.style.setProperty("--surface-2", value);
-    document.documentElement.style.setProperty("--surface-3", value);
-  }
-};
-
-colorInputs.forEach((input) => {
-  const variable = input.dataset.colorVar;
-  const savedValue = localStorage.getItem(`portfolio-color-${variable}`);
-
-  if (savedValue) {
-    input.value = savedValue;
-    setThemeColor(variable, savedValue);
-  }
-
-  input.addEventListener("input", () => {
-    setThemeColor(variable, input.value);
-    localStorage.setItem(`portfolio-color-${variable}`, input.value);
-  });
-});
-
-colorReset?.addEventListener("click", () => {
-  Object.entries(defaultColors).forEach(([variable, value]) => {
-    setThemeColor(variable, value);
-    localStorage.removeItem(`portfolio-color-${variable}`);
-
-    const input = document.querySelector(`[data-color-var="${variable}"]`);
-    if (input) {
-      input.value = value;
-    }
-  });
-});
 
 const updateBackToTop = () => {
   if (!backToTop) return;
@@ -80,19 +33,39 @@ window.addEventListener("scroll", updateBackToTop, { passive: true });
 window.addEventListener("resize", updateBackToTop);
 updateBackToTop();
 
-const revealObserver = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((entry) => {
-      entry.target.classList.toggle("is-visible", entry.isIntersecting);
-    });
-  },
-  {
-    threshold: 0.16,
-    rootMargin: "0px 0px -8% 0px",
-  },
-);
+const showVisibleRevealItems = () => {
+  revealItems.forEach((item) => {
+    const rect = item.getBoundingClientRect();
+    const isNearViewport = rect.top < window.innerHeight * 1.05 && rect.bottom > -window.innerHeight * 0.1;
 
-revealItems.forEach((item) => revealObserver.observe(item));
+    if (isNearViewport) {
+      item.classList.add("is-visible");
+    }
+  });
+};
+
+if ("IntersectionObserver" in window) {
+  const revealObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+        }
+      });
+    },
+    {
+      threshold: 0.16,
+      rootMargin: "0px 0px -8% 0px",
+    },
+  );
+
+  revealItems.forEach((item) => revealObserver.observe(item));
+} else {
+  revealItems.forEach((item) => item.classList.add("is-visible"));
+}
+
+showVisibleRevealItems();
+window.addEventListener("load", showVisibleRevealItems, { once: true });
 
 const cursorDot = document.querySelector(".cursor-dot");
 const cursorCard = document.querySelector(".cursor-card");
